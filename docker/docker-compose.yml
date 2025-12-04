@@ -1,0 +1,51 @@
+# Fichier : projet-soa-universite/docker/docker-compose.yml (Mise à jour)
+
+version: '3.8'
+
+services:
+  # 1. Base de données PostgreSQL pour le Service Étudiants
+  student_db:
+    # ... (Reste inchangé)
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user 
+      POSTGRES_PASSWORD: password 
+      POSTGRES_DB: students_db 
+    volumes:
+      - student_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Service Étudiants RESTful (Node.js)
+  student_service:
+    build:
+      # Chemin vers le dossier contenant le Dockerfile
+      context: ../services/student-service 
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # Mapping du port du conteneur (3000) au port hôte (3000)
+      - "3000:3000"
+    environment:
+      # Passer l'URI de connexion à l'intérieur du conteneur
+      # Le nom d'hôte est 'student_db' (le nom du service Docker)
+      POSTGRES_URI: "postgresql://user:password@student_db:5432/students_db"
+      PORT: 3000
+    depends_on:
+      # Le service dépend de la base de données
+      student_db:
+        condition: service_healthy # Attendre que la DB soit saine
+    volumes:
+      # Monter le code local pour le développement (changement à chaud)
+      # Retirez cette ligne pour la production
+      - ../services/student-service:/usr/src/app
+
+# Définition des volumes persistants
+volumes:
+  student_db_data:

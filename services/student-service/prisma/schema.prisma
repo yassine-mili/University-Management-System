@@ -1,0 +1,37 @@
+// Définition du fournisseur de base de données
+datasource db {
+  provider = "postgresql"
+}
+
+// Générateur du client Prisma (ce qui nous permet d'écrire des requêtes en JS)
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Définition du Modèle Étudiant
+model Student {
+  // Clé Primaire : ID auto-incrémenté pour PostgreSQL
+  id               Int      @id @default(autoincrement())
+  
+  // Clés uniques et obligatoires
+  numero_etudiant  String   @unique
+  email            String   @unique
+  
+  // Champs obligatoires
+  nom              String
+  prenom           String
+  niveau           String
+
+  // Champs optionnels
+  date_naissance   DateTime? @db.Date // ? indique optionnel, @db.Date utilise le type DATE de PostgreSQL
+  filiere          String?
+
+  // Champs de gestion des timestamps
+  date_inscription DateTime @default(now())
+  est_actif        Boolean  @default(true)
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("students") // Nom de la table dans la base de données
+}

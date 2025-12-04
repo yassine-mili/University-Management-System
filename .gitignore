@@ -1,0 +1,60 @@
+# Fichier: projet-soa-universite/.gitignore
+
+# --------------------------
+# 1. FICHIERS SECRETS ET LOCAUX
+# --------------------------
+
+# Variables d'environnement pour tous les services (contient les mots de passe de DB)
+**/.env
+# Fichiers d'environnement locaux spécifiques
+**/.env.local
+
+# --------------------------
+# 2. DEPENDANCES ET BUILD
+# --------------------------
+
+# Dépendances Node.js (pour student-service, auth-service, etc.)
+**/node_modules
+# Fichiers de cache npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers de build générés
+**/dist/
+**/build/
+**/target/ # Pour les projets Java (Spring)
+**/*.class
+
+# --------------------------
+# 3. FICHIERS SPECIFIQUES AUX OUTILS
+# --------------------------
+
+# A. PRISMA (pour student-service, grade-service)
+# Le client généré est ignoré, car il peut être régénéré
+**/node_modules/.prisma/
+**/prisma/generated/
+**/migrations/*.sql # Les fichiers SQL générés par Prisma pour la migration sont versionnés, mais on pourrait ignorer le dossier temporaire
+
+# B. PYTHON / FastAPI (pour grade-service)
+# Environnements virtuels Python
+**/venv
+**/__pycache__/
+*.pyc
+*.pyd
+*.so
+
+# C. IDE / ÉDITEURS
+# Visual Studio Code
+.vscode/
+# IntelliJ / JetBrains IDEs
+.idea/
+# Fichiers MacOS
+.DS_Store
+
+# --------------------------
+# 4. FICHIERS DOCKER
+# --------------------------
+
+# Le fichier docker-compose.yml est généralement versionné, mais ignorez les logs et caches :
+**/docker/logs/
