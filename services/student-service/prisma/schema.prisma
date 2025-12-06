@@ -1,6 +1,7 @@
 // Définition du fournisseur de base de données
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Générateur du client Prisma (ce qui nous permet d'écrire des requêtes en JS)

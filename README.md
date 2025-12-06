@@ -51,7 +51,7 @@ different technology stack to showcase polyglot architecture:
 ### 2. Student Service (Node.js + Express)
 - CRUD operations for student records
 - RESTful API endpoints
-- MongoDB data persistence
+- PostgreSQL data persistence
 
 ### 3. Grades Service (Python + FastAPI)
 - Grade management and calculations

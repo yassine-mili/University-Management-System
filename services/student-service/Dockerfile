@@ -1,7 +1,7 @@
 # Fichier : student-service/Dockerfile
 
 # Étape 1 : Image de base avec la version de Node.js supportée
-FROM node:20-alpine AS base
+FROM node:18-alpine AS base
 
 # Définir le répertoire de travail
 WORKDIR /usr/src/app

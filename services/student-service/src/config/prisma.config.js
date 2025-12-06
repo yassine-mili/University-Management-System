@@ -3,8 +3,10 @@
 const { PrismaClient } = require('@prisma/client');
 
 // Créer une instance unique du client Prisma pour toute l'application
-// Le client récupère l'URI de connexion depuis la variable d'environnement POSTGRES_URI
-const prisma = new PrismaClient();
+// Le client récupère l'URI de connexion depuis la variable d'environnement DATABASE_URL (ou POSTGRES_URI en fallback)
+const prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
+});
 
 // Fonction de vérification de la connexion
 async function connectDB() {
@@ -17,6 +19,13 @@ async function connectDB() {
         process.exit(1);
     }
 }
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+    console.log('SIGTERM reçu, fermeture des connexions...');
+    await prisma.$disconnect();
+    process.exit(0);
+});
 
 module.exports = {
     prisma,

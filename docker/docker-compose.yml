@@ -30,13 +30,15 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      # Mapping du port du conteneur (3000) au port hôte (3000)
-      - "3000:3000"
+      # Mapping du port du conteneur (8082) au port hôte (8082)
+      - "8082:8082"
     environment:
       # Passer l'URI de connexion à l'intérieur du conteneur
       # Le nom d'hôte est 'student_db' (le nom du service Docker)
+      DATABASE_URL: "postgresql://user:password@student_db:5432/students_db"
       POSTGRES_URI: "postgresql://user:password@student_db:5432/students_db"
-      PORT: 3000
+      PORT: 8082
+      NODE_ENV: development
     depends_on:
       # Le service dépend de la base de données
       student_db:
@@ -45,7 +47,10 @@ services:
       # Monter le code local pour le développement (changement à chaud)
       # Retirez cette ligne pour la production
       - ../services/student-service:/usr/src/app
+      # Utiliser un volume nommé pour node_modules afin de ne pas overrider les paquets installés
+      - student_service_node_modules:/usr/src/app/node_modules
 
 # Définition des volumes persistants
 volumes:
   student_db_data:
+  student_service_node_modules:
