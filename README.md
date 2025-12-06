@@ -139,9 +139,11 @@ Academic project completed in a team of 3 with clear role distribution:
 **Mili Yassine**
 - Portfolio: [yassinemili.me](https://yassinemili.me)
 - LinkedIn: [mili-yassine](https://linkedin.com/in/mili-yassine)
+  
 **Battikh Youssef**
 - Portfolio:
 - LinkedIn: [ysf-battikh](https://www.linkedin.com/in/ysf-battikh)
+  
 **Ksouri Fahmi**
 - Portfolio: 
 - LinkedIn:  
