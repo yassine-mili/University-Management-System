@@ -1,21 +1,20 @@
 # Fichier : projet-soa-universite/docker/docker-compose.yml (Mise à jour)
 
-version: '3.8'
+version: "3.8"
 
 services:
   # 1. Base de données PostgreSQL pour le Service Étudiants
   student_db:
-    # ... (Reste inchangé)
     image: postgres:14-alpine
     restart: always
     environment:
-      POSTGRES_USER: user 
-      POSTGRES_PASSWORD: password 
-      POSTGRES_DB: students_db 
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: students_db
     volumes:
       - student_db_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432" 
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -25,32 +24,93 @@ services:
   # 2. Service Étudiants RESTful (Node.js)
   student_service:
     build:
-      # Chemin vers le dossier contenant le Dockerfile
-      context: ../services/student-service 
+      context: ../services/student-service
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      # Mapping du port du conteneur (8082) au port hôte (8082)
       - "8082:8082"
     environment:
-      # Passer l'URI de connexion à l'intérieur du conteneur
-      # Le nom d'hôte est 'student_db' (le nom du service Docker)
       DATABASE_URL: "postgresql://user:password@student_db:5432/students_db"
       POSTGRES_URI: "postgresql://user:password@student_db:5432/students_db"
       PORT: 8082
       NODE_ENV: development
     depends_on:
-      # Le service dépend de la base de données
       student_db:
-        condition: service_healthy # Attendre que la DB soit saine
+        condition: service_healthy
     volumes:
-      # Monter le code local pour le développement (changement à chaud)
-      # Retirez cette ligne pour la production
       - ../services/student-service:/usr/src/app
-      # Utiliser un volume nommé pour node_modules afin de ne pas overrider les paquets installés
       - student_service_node_modules:/usr/src/app/node_modules
+
+  # 3. Base de données PostgreSQL pour le Service d'Authentification
+  auth_db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. Service d'Authentification (Spring Boot)
+  auth_service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: auth_db
+      DB_PORT: 5432
+      DB_NAME: auth_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
+    depends_on:
+      auth_db:
+        condition: service_healthy
+
+  # 5. Redis for API Gateway Rate Limiting
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # 6. API Gateway (Spring Cloud Gateway)
+  api_gateway:
+    build:
+      context: ../services/api-gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+      - auth_service
+      - student_service
 
 # Définition des volumes persistants
 volumes:
   student_db_data:
   student_service_node_modules:
+  auth_db_data:

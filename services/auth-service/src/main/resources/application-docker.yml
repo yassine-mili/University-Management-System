@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://auth_db:5432/auth_db
+    username: postgres
+    password: postgres
+
+logging:
+  level:
+    com.universite.auth: INFO
+    org.springframework.security: INFO
