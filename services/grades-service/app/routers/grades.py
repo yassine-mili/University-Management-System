@@ -5,7 +5,8 @@ from typing import List, Optional, Any
 
 from app.database import get_db
 from app.schemas import (
-    GradeCreate, GradeUpdate
+    GradeCreate, GradeUpdate, Grade, StudentGPA, StudentTranscript,
+    GradeStatistics, CourseStatistics, ApiResponse, ErrorResponse, SemesterAverage
 )
 from app import crud
 from app.business_logic import GradeCalculationService
@@ -259,6 +260,105 @@ def calculate_student_gpa(student_id: int, db: Session = Depends(get_db)):
         },
         "timestamp": datetime.utcnow().isoformat()
     }
+
+
+@router.get(
+    "/student/{student_id}/average",
+    summary="Calculate student average grade",
+    description="""Calculate the overall average grade for a specific student.
+    
+    Returns simple average of all grades and weighted GPA on 4.0 scale.""",
+    responses={
+        200: {"description": "Average calculated successfully"},
+        404: {"description": "No grades found for student"},
+    }
+)
+def calculate_student_average(student_id: int, db: Session = Depends(get_db)):
+    """Calculate overall average and GPA for a student"""
+    gpa, total_grades = GradeCalculationService.calculate_gpa(db, student_id)
+    average = GradeCalculationService.calculate_average_grade(db, student_id)
+
+    if total_grades == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No grades found for this student"
+        )
+
+    return {
+        "message": "Average calculated successfully",
+        "data": {
+            "student_id": student_id,
+            "gpa": gpa,
+            "total_grades": total_grades,
+            "average_grade": average
+        },
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+@router.get(
+    "/student/{student_id}/semester/{semester}/average",
+    summary="Calculate semester average",
+    description="""Calculate average grade for a specific semester.
+    
+    Format: 'YYYY-S' where S is 1 (Fall) or 2 (Spring).
+    Example: '2024-1' for Fall 2024.""",
+    responses={
+        200: {"description": "Semester average calculated"},
+        400: {"description": "Invalid semester format"},
+    }
+)
+def calculate_semester_average(
+    student_id: int,
+    semester: str,
+    db: Session = Depends(get_db)
+):
+    """Calculate semester average for a student"""
+    try:
+        average = crud.get_semester_average(db, student_id, semester)
+        
+        # Get grade count for semester
+        year, sem = semester.split("-")
+        year = int(year)
+        sem = int(sem)
+        
+        from datetime import date as dt_date
+        from sqlalchemy import and_
+        from app.models import Grade
+        
+        if sem == 1:
+            start_date = dt_date(year, 9, 1)
+            end_date = dt_date(year, 12, 31)
+        else:
+            start_date = dt_date(year, 1, 1)
+            end_date = dt_date(year, 5, 31)
+        
+        grades = db.query(Grade).filter(
+            and_(
+                Grade.student_id == student_id,
+                Grade.date >= start_date,
+                Grade.date <= end_date,
+            )
+        ).all()
+        
+        courses = len(set(g.course_id for g in grades))
+        
+        return {
+            "message": "Semester average calculated",
+            "data": {
+                "student_id": student_id,
+                "semester": semester,
+                "average_grade": average,
+                "total_grades": len(grades),
+                "courses_count": courses
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid semester format: {str(e)}"
+        )
 
 
 @router.get(

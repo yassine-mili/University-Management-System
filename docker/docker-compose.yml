@@ -127,7 +127,42 @@ services:
     volumes:
       - ../services/grades-service:/usr/src/app
 
-  # 8. API Gateway (Spring Cloud Gateway)
+  # 8. Base de données PostgreSQL pour le Service Courses
+  courses_db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: courses_db
+    volumes:
+      - courses_db_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 9. Service Courses (JAX-WS SOAP)
+  courses_service:
+    build:
+      context: ../services/courses
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: "jdbc:postgresql://courses_db:5432/courses_db"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      PORT: 8083
+    depends_on:
+      courses_db:
+        condition: service_healthy
+
+  # 10. API Gateway (Spring Cloud Gateway)
   api_gateway:
     build:
       context: ../services/api-gateway
@@ -144,6 +179,7 @@ services:
       - redis
       - auth_service
       - student_service
+      - courses_service
       - grades_service
 
 # Définition des volumes persistants
@@ -152,3 +188,4 @@ volumes:
   student_service_node_modules:
   auth_db_data:
   grades_db_data:
+  courses_db_data:
