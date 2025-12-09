@@ -79,11 +79,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         response.setStatusCode(httpStatus);
         response.getHeaders().add("Content-Type", "application/json");
         
-        String errorBody = String.format(
-            "{\"error\":\"%s\",\"message\":\"%s\",\"status\":%d}",
-            httpStatus.getReasonPhrase(),
-            err,
-            httpStatus.value()
+        String errorBody = "{\"error\":\"%s\",\"message\":\"%s\",\"status\":%d}".formatted(
+                httpStatus.getReasonPhrase(),
+                err,
+                httpStatus.value()
         );
         
         return response.writeWith(Mono.just(response.bufferFactory().wrap(errorBody.getBytes())));
