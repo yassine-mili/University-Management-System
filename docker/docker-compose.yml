@@ -1,4 +1,4 @@
-# Fichier : projet-soa-universite/docker/docker-compose.yml (Mise à jour)
+# Fichier : projet-soa-universite/docker/docker-compose.yml
 
 version: "3.8"
 
@@ -41,7 +41,37 @@ services:
       - ../services/student-service:/usr/src/app
       - student_service_node_modules:/usr/src/app/node_modules
 
-  # 3. Base de données PostgreSQL pour le Service d'Authentification
+  # 3. Base de données PostgreSQL pour le Service Cours
+  course_db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: courses_db
+    volumes:
+      - course_db_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. Service Cours SOAP (Java/JAX-WS)
+  course_service:
+    build:
+      context: ../services/course-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    depends_on:
+      course_db:
+        condition: service_healthy
+
+  # 5. Base de données PostgreSQL pour le Service d'Authentification
   auth_db:
     image: postgres:14-alpine
     restart: always
@@ -52,14 +82,14 @@ services:
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5435:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # 4. Service d'Authentification (Spring Boot)
+  # 6. Service d'Authentification (Spring Boot)
   auth_service:
     build:
       context: ../services/auth-service
@@ -79,7 +109,7 @@ services:
       auth_db:
         condition: service_healthy
 
-  # 5. Redis for API Gateway Rate Limiting
+  # 7. Redis for API Gateway Rate Limiting
   redis:
     image: redis:7-alpine
     restart: always
@@ -102,7 +132,7 @@ services:
     volumes:
       - grades_db_data:/var/lib/postgresql/data
     ports:
-      - "5435:5432"
+      - "5436:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -126,7 +156,6 @@ services:
         condition: service_healthy
     volumes:
       - ../services/grades-service:/usr/src/app
-
   # 8. API Gateway (Spring Cloud Gateway)
   api_gateway:
     build:
@@ -150,5 +179,6 @@ services:
 volumes:
   student_db_data:
   student_service_node_modules:
+  course_db_data:
   auth_db_data:
   grades_db_data:
