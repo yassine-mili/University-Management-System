@@ -21,6 +21,20 @@ class GradeCreate(BaseModel):
     grade_type: GradeTypeEnum
     date: date
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "student_id": 1001,
+                    "course_id": 101,
+                    "grade_value": 15.5,
+                    "grade_type": "FINAL",
+                    "date": "2024-12-08"
+                }
+            ]
+        }
+    }
+
     @field_validator('student_id')
     @classmethod
     def validate_student_id(cls, v):
@@ -161,6 +175,68 @@ class GradeStatistics(BaseModel):
     lowest_grade: float
     total_grades: int
     grade_distribution: dict = {}
+
+
+class CourseStatistics(BaseModel):
+    """Schema for course statistics"""
+    course_id: int
+    total_students: int
+    average_grade: float
+    highest_grade: float
+    lowest_grade: float
+    passed_count: int
+    failed_count: int
+    grade_type_distribution: dict = {}
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "course_id": 101,
+                    "total_students": 45,
+                    "average_grade": 14.5,
+                    "highest_grade": 19.5,
+                    "lowest_grade": 8.0,
+                    "passed_count": 40,
+                    "failed_count": 5,
+                    "grade_type_distribution": {
+                        "FINAL": {"count": 45, "average": 15.2},
+                        "MIDTERM": {"count": 45, "average": 14.0}
+                    }
+                }
+            ]
+        }
+    }
+
+
+class SemesterAverage(BaseModel):
+    """Schema for semester average response"""
+    student_id: int
+    semester: str
+    average_grade: float
+    total_grades: int
+    courses_count: int
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "student_id": 1001,
+                    "semester": "2024-1",
+                    "average_grade": 15.5,
+                    "total_grades": 12,
+                    "courses_count": 5
+                }
+            ]
+        }
+    }
+
+
+class ApiResponse(BaseModel):
+    """Generic API response wrapper"""
+    message: str
+    data: Any
+    timestamp: str
 
 
 class ErrorResponse(BaseModel):
