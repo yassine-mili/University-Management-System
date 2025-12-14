@@ -1,0 +1,7 @@
+com/univ/course/Enrollment.class
+com/univ/course/CourseServicePublisher.class
+com/univ/course/TeacherCourse.class
+com/univ/course/Course.class
+com/univ/course/CourseServiceImpl.class
+com/univ/course/CourseService.class
+com/univ/course/Schedule.class
