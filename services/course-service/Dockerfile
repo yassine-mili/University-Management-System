@@ -1,7 +1,7 @@
 # Fichier : course-service/Dockerfile
 
 # Étape de construction
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY src ./src
 RUN mvn clean install -DskipTests
 
 # Étape d'exécution (utilisation d'une image JRE plus légère)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
@@ -25,4 +25,4 @@ COPY --from=builder /app/target/course-service-1.0.0-SNAPSHOT.jar course-service
 EXPOSE 8083
 
 # Commande de démarrage
-ENTRYPOINT ["java", "-jar", "course-service.jar"]
+ENTRYPOINT ["java", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "-jar", "course-service.jar"]
