@@ -6,21 +6,69 @@ import jakarta.jws.WebService;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @WebService(endpointInterface = "com.univ.course.CourseService")
 public class CourseServiceImpl implements CourseService {
 
-    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("CourseUnit");
+    private final EntityManagerFactory emf;
 
-    private EntityManager getEntityManager() { return emf.createEntityManager(); }
+    /**
+     * Constructor for use by CourseServicePublisher (accepts dynamic properties).
+     */
+    public CourseServiceImpl(Map<String, String> jpaProperties) {
+        // Initializes the EMF using dynamically passed configuration (Fix 1)
+        this.emf = Persistence.createEntityManagerFactory("CourseUnit", jpaProperties);
+    }
+    
+    /**
+     * Default constructor for fallback/testing (reads from persistence.xml).
+     */
+    public CourseServiceImpl() {
+        this.emf = Persistence.createEntityManagerFactory("CourseUnit"); 
+    }
 
+    private EntityManager getEntityManager() { 
+        return emf.createEntityManager(); 
+    }
+
+    // --- MAPPING UTILITY METHODS (Fix 3) ---
+
+    // Convert Entity (DB) to DTO (SOAP)
+    private CourseDTO toDto(Course entity) {
+        if (entity == null) return null;
+        CourseDTO dto = new CourseDTO();
+        dto.setId(entity.getId());
+        dto.setCode(entity.getCode());
+        dto.setTitle(entity.getTitle());
+        dto.setDescription(entity.getDescription());
+        dto.setCredits(entity.getCredits());
+        dto.setCapacity(entity.getCapacity());
+        dto.setSemester(entity.getSemester());
+        // Nested entities (schedules, enrollments) would be mapped to DTOs here
+        return dto;
+    }
+    
+    // Convert DTO (SOAP) to Entity (DB)
+    private Course toEntity(CourseDTO dto) {
+        if (dto == null) return null;
+        Course entity = new Course();
+        entity.setId(dto.getId()); 
+        entity.setCode(dto.getCode());
+        entity.setTitle(dto.getTitle());
+        entity.setDescription(dto.getDescription());
+        entity.setCredits(dto.getCredits());
+        entity.setCapacity(dto.getCapacity());
+        entity.setSemester(dto.getSemester());
+        // Nested DTOs would be mapped to Entities here
+        return entity;
+    }
+    
     // --- LOGIQUE MÉTIER ---
 
     private boolean checkScheduleConflict(EntityManager em, Schedule newSchedule) {
-        // Logique de détection de conflit: vérifie si une autre entrée a lieu
-        // le même jour, dans la même salle, avec un chevauchement temporel.
-
+        // Logique de détection de conflit inchangée
         List<Schedule> conflicts = em.createQuery(
                         "SELECT s FROM Schedule s WHERE s.day = :day AND s.room = :room AND " +
                                 "(:newStart < s.endTime AND :newEnd > s.startTime)", Schedule.class)
@@ -33,28 +81,30 @@ public class CourseServiceImpl implements CourseService {
         return !conflicts.isEmpty();
     }
 
-    private boolean checkCapacity(Course course) {
-        // La méthode getEnrollments() renvoie une collection de relations d'inscription
-        // Nous nous assurons de charger cette collection avant de la compter.
-        if (course.getEnrollments() == null) {
-            return true; // Pas d'inscrits, capacité non atteinte
-        }
-        return course.getEnrollments().size() < course.getCapacity();
+    // Efficient enrollment count using JPQL (Fix 2)
+    private boolean checkCapacity(EntityManager em, Course course) {
+        // Use a direct COUNT query to avoid lazy loading issues
+        Long currentEnrollmentCount = em.createQuery(
+                "SELECT COUNT(e) FROM Enrollment e WHERE e.course.id = :courseId", Long.class)
+                .setParameter("courseId", course.getId())
+                .getSingleResult();
+
+        return currentEnrollmentCount < course.getCapacity();
     }
 
-    // --- OPÉRATIONS CRUD COURSE ---
+    // --- OPÉRATIONS CRUD COURSE (Using DTOs) ---
 
     @Override
-    public Course createCourse(Course course) {
+    public CourseDTO createCourse(CourseDTO dto) {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         try {
+            Course course = toEntity(dto); // Map DTO to Entity
             em.persist(course);
             em.getTransaction().commit();
-            return course;
+            return toDto(course); // Return mapped Entity to DTO
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            // Gérer les violations d'unicité (code) ici si nécessaire
             System.err.println("Erreur creation: " + e.getMessage());
             return null;
         } finally {
@@ -63,12 +113,15 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public Course getCourse(String code) {
+    public CourseDTO getCourse(String code) {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery("SELECT c FROM Course c WHERE c.code = :code", Course.class)
+            Course course = em.createQuery("SELECT c FROM Course c WHERE c.code = :code", Course.class)
                     .setParameter("code", code)
                     .getSingleResult();
+            
+            return toDto(course); // Return mapped Entity to DTO
+            
         } catch (NoResultException e) {
             return null;
         } finally {
@@ -77,19 +130,29 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public Course updateCourse(Course updatedCourse) {
+    public CourseDTO updateCourse(CourseDTO dto) {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         try {
-            // S'assurer que l'entité existe avant de la mettre à jour
-            Course existingCourse = em.find(Course.class, updatedCourse.getId());
+            // 1. Fetch existing entity
+            Course existingCourse = em.find(Course.class, dto.getId());
             if (existingCourse == null) {
                 em.getTransaction().rollback();
                 return null;
             }
-            Course course = em.merge(updatedCourse);
+            
+            // 2. Update existing entity with DTO data
+            existingCourse.setCode(dto.getCode());
+            existingCourse.setTitle(dto.getTitle());
+            existingCourse.setDescription(dto.getDescription());
+            existingCourse.setCredits(dto.getCredits());
+            existingCourse.setCapacity(dto.getCapacity());
+            existingCourse.setSemester(dto.getSemester());
+            
             em.getTransaction().commit();
-            return course;
+            
+            return toDto(existingCourse); // Return mapped Entity to DTO
+            
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             System.err.println("Erreur mise à jour: " + e.getMessage());
@@ -110,7 +173,7 @@ public class CourseServiceImpl implements CourseService {
                 em.getTransaction().commit();
                 return true;
             }
-            em.getTransaction().rollback(); // Si non trouvé, on annule
+            em.getTransaction().rollback(); 
             return false;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -122,17 +185,25 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> listCourses(String semesterFilter) {
+    public List<CourseDTO> listCourses(String semesterFilter) {
         EntityManager em = getEntityManager();
         try {
             String query = "SELECT c FROM Course c";
+            TypedQuery<Course> courseQuery;
+            
             if (semesterFilter != null && !semesterFilter.trim().isEmpty()) {
                 query += " WHERE c.semester = :semester";
-                return em.createQuery(query, Course.class)
-                        .setParameter("semester", semesterFilter)
-                        .getResultList();
+                courseQuery = em.createQuery(query, Course.class)
+                        .setParameter("semester", semesterFilter);
+            } else {
+                courseQuery = em.createQuery(query, Course.class);
             }
-            return em.createQuery(query, Course.class).getResultList();
+            
+            // Map the resulting list of Entities to a list of DTOs
+            return courseQuery.getResultList().stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+                    
         } finally {
             em.close();
         }
@@ -145,7 +216,12 @@ public class CourseServiceImpl implements CourseService {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         try {
-            Course course = getCourse(courseCode);
+            // NOTE: We still use getCourse(code) which returns DTO, we need the entity here.
+            // A better solution would be to create a private getCourseEntity method.
+            Course course = em.createQuery("SELECT c FROM Course c WHERE c.code = :code", Course.class)
+                    .setParameter("code", courseCode)
+                    .getSingleResult();
+            
             if (course == null) throw new IllegalArgumentException("Cours non trouvé.");
 
             if (checkScheduleConflict(em, schedule)) {
@@ -156,6 +232,8 @@ public class CourseServiceImpl implements CourseService {
             em.persist(schedule);
             em.getTransaction().commit();
             return schedule;
+        } catch (NoResultException e) {
+             throw new IllegalArgumentException("Cours non trouvé.");
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
@@ -184,7 +262,11 @@ public class CourseServiceImpl implements CourseService {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         try {
-            Course course = getCourse(courseCode);
+             // NOTE: Same issue as above, need the Entity, not the DTO result. 
+             Course course = em.createQuery("SELECT c FROM Course c WHERE c.code = :code", Course.class)
+                    .setParameter("code", courseCode)
+                    .getSingleResult();
+            
             if (course == null) throw new IllegalArgumentException("Cours non trouvé.");
 
             // Vérification si l'étudiant est déjà inscrit
@@ -198,8 +280,8 @@ public class CourseServiceImpl implements CourseService {
                 throw new Exception("L'étudiant est déjà inscrit à ce cours.");
             }
 
-            // Vérification de la Capacité (Business Logic)
-            if (!checkCapacity(course)) {
+            // Vérification de la Capacité (Business Logic) - Using efficient method (Fix 2)
+            if (!checkCapacity(em, course)) {
                 throw new Exception("Le cours a atteint sa capacité maximale.");
             }
 
@@ -211,6 +293,8 @@ public class CourseServiceImpl implements CourseService {
             em.persist(enrollment);
             em.getTransaction().commit();
             return enrollment;
+        } catch (NoResultException e) {
+            throw new IllegalArgumentException("Cours non trouvé.");
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
@@ -220,13 +304,19 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<Course> getStudentCourses(Long studentId) {
+    public List<CourseDTO> getStudentCourses(Long studentId) {
         EntityManager em = getEntityManager();
         try {
-            return em.createQuery(
+            // Selects the Course entity, then maps it to DTO (Fix 3)
+            List<Course> courses = em.createQuery(
                             "SELECT e.course FROM Enrollment e WHERE e.studentId = :studentId", Course.class)
                     .setParameter("studentId", studentId)
                     .getResultList();
+            
+            return courses.stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+                    
         } finally {
             em.close();
         }

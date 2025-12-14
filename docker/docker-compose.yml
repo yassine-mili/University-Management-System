@@ -66,114 +66,122 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8083:8083"
+      # Expose the internal port 8083
+      - "8083:8083" 
+    environment:
+      # --- NEW Environment Variables ---
+      DB_URL: "jdbc:postgresql://course_db:5432/courses_db" # DB hostname inside Docker network
+      DB_USER: "user"
+      DB_PASSWORD: "password"
+      PORT: 8083 # Optional, but good practice to be explicit
+      # ---------------------------------
     depends_on:
       course_db:
         condition: service_healthy
 
-  # 5. Base de données PostgreSQL pour le Service d'Authentification
-  auth_db:
-    image: postgres:14-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: auth_db
-    volumes:
-      - auth_db_data:/var/lib/postgresql/data
-    ports:
-      - "5435:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # # 5. Base de données PostgreSQL pour le Service d'Authentification
+  # auth_db:
+  #   image: postgres:14-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: auth_db
+  #   volumes:
+  #     - auth_db_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5435:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
-  # 6. Service d'Authentification (Spring Boot)
-  auth_service:
-    build:
-      context: ../services/auth-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      DB_HOST: auth_db
-      DB_PORT: 5432
-      DB_NAME: auth_db
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
-    depends_on:
-      auth_db:
-        condition: service_healthy
+  # # 6. Service d'Authentification (Spring Boot)
+  # auth_service:
+  #   build:
+  #     context: ../services/auth-service
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     DB_HOST: auth_db
+  #     DB_PORT: 5432
+  #     DB_NAME: auth_db
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
+  #   depends_on:
+  #     auth_db:
+  #       condition: service_healthy
 
-  # 7. Redis for API Gateway Rate Limiting
-  redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+  # # 7. Redis for API Gateway Rate Limiting
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: always
+  #   ports:
+  #     - "6379:6379"
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
 
-  # 6. Base de données PostgreSQL pour le Service Grades
-  grades_db:
-    image: postgres:14-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: grades_db
-    volumes:
-      - grades_db_data:/var/lib/postgresql/data
-    ports:
-      - "5436:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # # 6. Base de données PostgreSQL pour le Service Grades
+  # grades_db:
+  #   image: postgres:14-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: grades_db
+  #   volumes:
+  #     - grades_db_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5436:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
-  # 7. Service Grades (Python FastAPI)
-  grades_service:
-    build:
-      context: ../services/grades-service
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8084:8084"
-    environment:
-      DATABASE_URL: "postgresql://user:password@grades_db:5432/grades_db"
-      PORT: 8084
-      ENVIRONMENT: development
-    depends_on:
-      grades_db:
-        condition: service_healthy
-    volumes:
-      - ../services/grades-service:/usr/src/app
-  # 8. API Gateway (Spring Cloud Gateway)
-  api_gateway:
-    build:
-      context: ../services/api-gateway
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      - redis
-      - auth_service
-      - student_service
-      - grades_service
+  # # 7. Service Grades (Python FastAPI)
+  # grades_service:
+  #   build:
+  #     context: ../services/grades-service
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     DATABASE_URL: "postgresql://user:password@grades_db:5432/grades_db"
+  #     PORT: 8084
+  #     ENVIRONMENT: development
+  #   depends_on:
+  #     grades_db:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ../services/grades-service:/usr/src/app
+  # # 8. API Gateway (Spring Cloud Gateway)
+  # api_gateway:
+  #   build:
+  #     context: ../services/api-gateway
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: docker
+  #     JWT_SECRET: UniversityManagementSystemSecretKey2024VeryLongSecretForHS512Algorithm
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #   depends_on:
+  #     - redis
+  #     - auth_service
+  #     - student_service
+  #     - grades_service
 
 # Définition des volumes persistants
 volumes:

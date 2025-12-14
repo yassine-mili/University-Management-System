@@ -1,6 +1,8 @@
+/home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/ScheduleDTO.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/Course.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/CourseService.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/CourseServicePublisher.java
+/home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/CourseDTO.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/CourseServiceImpl.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/Schedule.java
 /home/bratoukha/Projects/SOA/projet-soa-universite/University-Management-System/services/course-service/src/main/java/com/univ/course/Enrollment.java

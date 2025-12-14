@@ -10,18 +10,18 @@ import java.util.List;
 @WebService(name = "CourseServicePort")
 public interface CourseService {
 
-    // CRUD des cours
-    @WebMethod Course createCourse(@WebParam(name = "course") Course course);
-    @WebMethod Course getCourse(@WebParam(name = "code") String code);
-    @WebMethod Course updateCourse(@WebParam(name = "course") Course course);
+    // CRUD des cours - NOW USING CourseDTO
+    @WebMethod CourseDTO createCourse(@WebParam(name = "course") CourseDTO course);
+    @WebMethod CourseDTO getCourse(@WebParam(name = "code") String code);
+    @WebMethod CourseDTO updateCourse(@WebParam(name = "course") CourseDTO course);
     @WebMethod boolean deleteCourse(@WebParam(name = "courseId") Long courseId);
-    @WebMethod List<Course> listCourses(@WebParam(name = "semesterFilter") String semesterFilter);
+    @WebMethod List<CourseDTO> listCourses(@WebParam(name = "semesterFilter") String semesterFilter);
 
-    // Gestion des horaires
+    // Gestion des horaires - KEEPING ENTITY FOR NOW (or would use ScheduleDTO)
     @WebMethod Schedule addSchedule(@WebParam(name = "courseCode") String courseCode, @WebParam(name = "schedule") Schedule schedule) throws Exception;
     @WebMethod List<Schedule> getScheduleByCourse(@WebParam(name = "courseCode") String courseCode);
 
-    // Inscription des étudiants
+    // Inscription des étudiants - KEEPING ENTITY FOR NOW (or would use EnrollmentDTO)
     @WebMethod Enrollment enrollStudent(@WebParam(name = "studentId") Long studentId, @WebParam(name = "courseCode") String courseCode) throws Exception;
-    @WebMethod List<Course> getStudentCourses(@WebParam(name = "studentId") Long studentId);
+    @WebMethod List<CourseDTO> getStudentCourses(@WebParam(name = "studentId") Long studentId);
 }
