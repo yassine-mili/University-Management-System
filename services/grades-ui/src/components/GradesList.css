@@ -1,0 +1,120 @@
+.grades-list-container {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+}
+
+.grades-list-container h2 {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
+
+.grades-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.grades-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.grades-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.grades-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.grades-table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.grades-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.course-id {
+  font-weight: 600;
+  color: #667eea;
+}
+
+.grade-value {
+  font-weight: 600;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.grade-badge.pass {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.grade-badge.fail {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.status-badge.pass {
+  background: #c8e6c9;
+  color: #1b5e20;
+}
+
+.status-badge.fail {
+  background: #ffcdd2;
+  color: #b71c1c;
+}
+
+.grade-row.fail {
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .grades-list-container {
+    padding: 20px;
+  }
+
+  .grades-table {
+    font-size: 0.9rem;
+  }
+
+  .grades-table th,
+  .grades-table td {
+    padding: 10px;
+  }
+
+  .btn-danger {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}

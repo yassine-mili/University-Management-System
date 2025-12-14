@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings"""
     database_url: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://user:password@localhost:5435/grades_db"
+        "postgresql://appuser:password123@localhost:5432/grades_db"
     )
     port: int = int(os.getenv("PORT", 8084))
     environment: str = os.getenv("ENVIRONMENT", "development")
