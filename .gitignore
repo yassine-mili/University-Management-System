@@ -1,60 +1,301 @@
-# Fichier: projet-soa-universite/.gitignore
+# University Management System - .gitignore
 
-# --------------------------
-# 1. FICHIERS SECRETS ET LOCAUX
-# --------------------------
+# ============================================
+# 1. FICHIERS SENSIBLES ET SECRETS
+# ============================================
 
-# Variables d'environnement pour tous les services (contient les mots de passe de DB)
+# Variables d'environnement (contiennent mots de passe DB, JWT secrets, etc.)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
 **/.env
-# Fichiers d'environnement locaux spécifiques
-**/.env.local
+**/.env.*
 
-# --------------------------
-# 2. DEPENDANCES ET BUILD
-# --------------------------
+# Fichiers de configuration sensibles
+**/application-local.yml
+**/application-local.properties
+**/appsettings.Local.json
+**/secrets.json
 
-# Dépendances Node.js (pour student-service, auth-service, etc.)
-**/node_modules
-# Fichiers de cache npm
+# Certificats et clés
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+
+# ============================================
+# 2. DÉPENDANCES ET PACKAGES
+# ============================================
+
+# Node.js
+node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+.yarn/
 
-# Fichiers de build générés
-**/dist/
-**/build/
-**/target/ # Pour les projets Java (Spring)
-**/*.class
-
-# --------------------------
-# 3. FICHIERS SPECIFIQUES AUX OUTILS
-# --------------------------
-
-# A. PRISMA (pour student-service, grade-service)
-# Le client généré est ignoré, car il peut être régénéré
-**/node_modules/.prisma/
-**/prisma/generated/
-**/migrations/*.sql # Les fichiers SQL générés par Prisma pour la migration sont versionnés, mais on pourrait ignorer le dossier temporaire
-
-# B. PYTHON / FastAPI (pour grade-service)
-# Environnements virtuels Python
-**/venv
+# Python
+venv/
+env/
+ENV/
+**/venv/
 **/__pycache__/
 *.pyc
+*.pyo
 *.pyd
-*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
 
-# C. IDE / ÉDITEURS
+# .NET
+**/bin/
+**/obj/
+**/packages/
+*.dll
+*.exe
+*.pdb
+*.user
+*.suo
+*.cache
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Java/Maven
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd
+
+# ============================================
+# 3. BUILDS ET ARTEFACTS
+# ============================================
+
+# Frontend builds
+**/build/
+**/dist/
+**/.next/
+**/.nuxt/
+**/out/
+**/.cache/
+
+# Backend builds
+**/target/
+**/bin/
+**/obj/
+
+# Logs
+*.log
+logs/
+**/logs/
+*.log.*
+
+# ============================================
+# 4. BASES DE DONNÉES
+# ============================================
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# PostgreSQL dumps
+*.sql
+*.dump
+
+# Database data (conservez les volumes Docker mais pas les dumps)
+**/data/
+**/pgdata/
+*.backup
+
+# Prisma
+**/node_modules/.prisma/
+**/prisma/generated/
+
+# ============================================
+# 5. IDE ET ÉDITEURS
+# ============================================
+
 # Visual Studio Code
 .vscode/
-# IntelliJ / JetBrains IDEs
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.code-workspace
+
+# IntelliJ IDEA / JetBrains
 .idea/
-# Fichiers MacOS
+*.iml
+*.iws
+*.ipr
+.idea_modules/
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.sln.iml
+
+# ============================================
+# 6. SYSTÈMES D'EXPLOITATION
+# ============================================
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
-# --------------------------
-# 4. FICHIERS DOCKER
-# --------------------------
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Le fichier docker-compose.yml est généralement versionné, mais ignorez les logs et caches :
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# 7. DOCKER
+# ============================================
+
+# Logs Docker
 **/docker/logs/
+docker-compose.override.yml
+
+# Volumes (ne pas versionner les données)
+**/volumes/
+
+# ============================================
+# 8. FICHIERS TEMPORAIRES
+# ============================================
+
+# Fichiers temporaires généraux
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.*.sw?
+
+# OS generated files
+.DS_Store?
+Icon?
+.Spotlight-V100
+.Trashes
+
+# ============================================
+# 9. TESTS ET COVERAGE
+# ============================================
+
+# Test coverage
+coverage/
+.nyc_output/
+*.coverage
+htmlcov/
+.pytest_cache/
+junit.xml
+test-results/
+**/test-results/
+
+# ============================================
+# 10. DOCUMENTATION ET RAPPORTS
+# ============================================
+
+# Documentation générée
+**/docs/_build/
+**/site/
+
+# Rapports
+**/reports/
+**/*.report
+
+# ============================================
+# 11. FICHIERS SPÉCIFIQUES AU PROJET
+# ============================================
+
+# Fichiers de test créés manuellement
+test-login.json
+**/test-requests/*.http.bak
+
+# Résultats de tests
+test-results/
+**/PHASE*_TEST_RESULTS_*.txt
+
+# Fichiers temporaires de développement
+*.bak
+*.orig
+TODO.md
+NOTES.md
+
+# ============================================
+# 12. SÉCURITÉ ET TOKENS
+# ============================================
+
+# Tokens et credentials
+*.token
+.npmrc
+.yarnrc
+
+# AWS
+.aws/
+
+# ============================================
+# EXCEPTIONS (fichiers à inclure)
+# ============================================
+
+# Inclure les fichiers d'exemple
+!**/.env.example
+!**/appsettings.example.json
+!**/application.example.yml
+
+# Inclure les Dockerfiles et configurations essentielles
+!**/Dockerfile
+!**/docker-compose.yml
+!**/.dockerignore
+
+# Inclure les fichiers README et documentation
+!**/README.md
+!**/QUICK_START.md
+!**/documentation/**
