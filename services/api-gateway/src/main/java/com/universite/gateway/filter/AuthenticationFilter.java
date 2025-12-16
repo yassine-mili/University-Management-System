@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -30,6 +31,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             ServerHttpRequest request = exchange.getRequest();
 
             log.debug("Processing request: {} {}", request.getMethod(), request.getURI());
+
+            if (request.getMethod() == HttpMethod.OPTIONS) {
+                log.trace("Allowing CORS preflight without auth for: {}", request.getURI());
+                return chain.filter(exchange);
+            }
 
             // Extract Authorization header
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
@@ -78,6 +84,14 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(httpStatus);
         response.getHeaders().add("Content-Type", "application/json");
+        String origin = exchange.getRequest().getHeaders().getOrigin();
+        if (origin != null) {
+            response.getHeaders().set("Access-Control-Allow-Origin", origin);
+            response.getHeaders().set("Vary", HttpHeaders.ORIGIN);
+        }
+        response.getHeaders().set("Access-Control-Allow-Credentials", "true");
+        response.getHeaders().set("Access-Control-Allow-Headers", "*");
+        response.getHeaders().set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH");
         
         String errorBody = String.format(
             "{\"error\":\"%s\",\"message\":\"%s\",\"status\":%d}",

@@ -10,11 +10,14 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          uri: http://auth_service:8081
+          uri: http://auth-service:8081
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=2
+            - name: RewritePath
+              args:
+                regexp: /api/auth/(?<remaining>.*)
+                replacement: /api/v1/auth/${remaining}
             - name: CircuitBreaker
               args:
                 name: authService
@@ -26,11 +29,15 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
 
         - id: student-service
-          uri: http://student_service:8082
+          uri: http://student-service:8082
           predicates:
             - Path=/api/students/**
           filters:
-            - StripPrefix=2
+            - name: AuthenticationFilter
+            - name: RewritePath
+              args:
+                regexp: /api/students/(?<remaining>.*)
+                replacement: /api/v1/students/${remaining}
             - name: CircuitBreaker
               args:
                 name: studentService
@@ -42,11 +49,11 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
 
         - id: courses-service
-          uri: http://courses_service:8083
+          uri: http://courses-service:8083
           predicates:
             - Path=/api/courses/**
           filters:
-            - StripPrefix=2
+            - StripPrefix=1
             - name: CircuitBreaker
               args:
                 name: coursesService
@@ -58,11 +65,15 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
 
         - id: grades-service
-          uri: http://grades_service:8084
+          uri: http://grades-service:8084
           predicates:
             - Path=/api/grades/**
           filters:
-            - StripPrefix=2
+            - name: AuthenticationFilter
+            - name: RewritePath
+              args:
+                regexp: /api/grades/(?<remaining>.*)
+                replacement: /api/v1/grades/${remaining}
             - name: CircuitBreaker
               args:
                 name: gradesService
@@ -74,11 +85,24 @@ spring:
                 redis-rate-limiter.requestedTokens: 1
 
         - id: billing-service
-          uri: http://billing_service:5000
+          uri: http://billing-service:5000
           predicates:
             - Path=/api/billing/**
           filters:
+            - name: AuthenticationFilter
             - StripPrefix=2
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Origin
+                value: "*"
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Headers
+                value: "*"
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Methods
+                value: "GET,POST,OPTIONS"
             - name: CircuitBreaker
               args:
                 name: billingService

@@ -1,0 +1,10 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:bil="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <bil:GetFinancialSummary>
+         <bil:studentId>STU001</bil:studentId>
+         <bil:year>2024</bil:year>
+      </bil:GetFinancialSummary>
+   </soapenv:Body>
+</soapenv:Envelope>

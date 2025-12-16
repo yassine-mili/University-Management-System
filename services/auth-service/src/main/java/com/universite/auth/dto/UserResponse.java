@@ -20,4 +20,5 @@ public class UserResponse {
     private Role role;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
+    private String studentId; // Student number if user is a student
 }

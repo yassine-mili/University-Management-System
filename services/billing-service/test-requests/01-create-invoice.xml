@@ -1,0 +1,24 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:bil="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <bil:CreateInvoice>
+         <bil:request>
+            <bil:StudentId>STU001</bil:StudentId>
+            <bil:DueDate>2024-12-31T00:00:00</bil:DueDate>
+            <bil:Items>
+               <bil:InvoiceItemDTO>
+                  <bil:Description>Tuition Fee - Fall 2024</bil:Description>
+                  <bil:Amount>5000.00</bil:Amount>
+                  <bil:Quantity>1</bil:Quantity>
+               </bil:InvoiceItemDTO>
+               <bil:InvoiceItemDTO>
+                  <bil:Description>Lab Fee - Computer Science</bil:Description>
+                  <bil:Amount>250.00</bil:Amount>
+                  <bil:Quantity>1</bil:Quantity>
+               </bil:InvoiceItemDTO>
+            </bil:Items>
+         </bil:request>
+      </bil:CreateInvoice>
+   </soapenv:Body>
+</soapenv:Envelope>

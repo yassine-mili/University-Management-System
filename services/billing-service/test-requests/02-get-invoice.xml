@@ -1,0 +1,9 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:bil="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <bil:GetInvoice>
+         <bil:invoiceId>1</bil:invoiceId>
+      </bil:GetInvoice>
+   </soapenv:Body>
+</soapenv:Envelope>

@@ -1,0 +1,18 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: courses-service
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+
+logging:
+  level:
+    root: INFO
+    com.universite.courses: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

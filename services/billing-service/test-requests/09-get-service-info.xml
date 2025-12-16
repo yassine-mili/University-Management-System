@@ -1,0 +1,7 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:bil="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <bil:GetServiceInfo/>
+   </soapenv:Body>
+</soapenv:Envelope>

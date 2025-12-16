@@ -27,6 +27,11 @@ jwt:
   access-token-expiration: 3600000 # 1 hour in milliseconds
   refresh-token-expiration: 604800000 # 7 days in milliseconds
 
+# Student Service Configuration
+student:
+  service:
+    url: ${STUDENT_SERVICE_URL:http://localhost:8082}
+
 # Springdoc OpenAPI Configuration
 springdoc:
   api-docs:
@@ -44,3 +49,7 @@ logging:
     org.hibernate.SQL: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+app:
+  sample-data:
+    enabled: ${ENABLE_SAMPLE_DATA:true}

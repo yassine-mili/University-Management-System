@@ -4,7 +4,15 @@ spring:
     username: postgres
     password: postgres
 
+student:
+  service:
+    url: http://student_service:8082
+
 logging:
   level:
     com.universite.auth: INFO
     org.springframework.security: INFO
+
+app:
+  sample-data:
+    enabled: ${ENABLE_SAMPLE_DATA:true}

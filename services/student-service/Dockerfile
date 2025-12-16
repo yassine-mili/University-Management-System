@@ -20,11 +20,14 @@ RUN npx prisma generate
 
 # Copier le reste du code source
 COPY src ./src/
-COPY .env ./.env
+COPY entrypoint.sh ./entrypoint.sh
+
+# Rendre le script exécutable
+RUN chmod +x ./entrypoint.sh
 
 # Étape de démarrage
 # Le port 3000 doit être exposé et correspond au PORT défini dans server.js
 EXPOSE 3000
 
 # Commande de démarrage du service Node.js
-CMD ["node", "src/server.js"]
+CMD ["./entrypoint.sh"]

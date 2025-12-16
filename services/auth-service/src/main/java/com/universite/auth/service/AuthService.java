@@ -1,5 +1,6 @@
 package com.universite.auth.service;
 
+import com.universite.auth.client.StudentServiceClient;
 import com.universite.auth.dto.*;
 import com.universite.auth.exception.InvalidTokenException;
 import com.universite.auth.exception.UserAlreadyExistsException;
@@ -31,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final StudentServiceClient studentServiceClient;
 
     @Value("${jwt.access-token-expiration}")
     private Long accessTokenExpiration;
@@ -64,6 +66,12 @@ public class AuthService {
 
         user = userRepository.save(user);
 
+        // Create or fetch student profile if role is STUDENT
+        String studentId = null;
+        if (user.getRole() == com.universite.auth.model.Role.STUDENT) {
+            studentId = studentServiceClient.getOrCreateStudentProfile(user.getId(), user.getEmail(), user.getUsername());
+        }
+
         // Generate tokens
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = createRefreshToken(user);
@@ -72,16 +80,25 @@ public class AuthService {
                 accessToken,
                 refreshToken,
                 accessTokenExpiration,
-                mapToUserResponse(user)
+                mapToUserResponse(user, studentId)
         );
     }
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
+        String identifier = request.getUsername().trim();
+        request.setUsername(identifier);
+
+        // Allow login using either username or email for convenience
+        if (identifier.contains("@")) {
+            userRepository.findByEmail(identifier.toLowerCase())
+                .ifPresent(user -> request.setUsername(user.getUsername()));
+        }
+
         // Authenticate user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                request.getUsername(),
                         request.getPassword()
                 )
         );
@@ -172,6 +189,20 @@ public class AuthService {
     }
 
     private UserResponse mapToUserResponse(User user) {
+        return mapToUserResponse(user, null);
+    }
+
+    private UserResponse mapToUserResponse(User user, String studentId) {
+        String resolvedStudentId = studentId;
+
+        if (resolvedStudentId == null && user.getRole() == com.universite.auth.model.Role.STUDENT) {
+            resolvedStudentId = studentServiceClient.getOrCreateStudentProfile(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getUsername()
+            );
+        }
+
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -179,6 +210,7 @@ public class AuthService {
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .lastLogin(user.getLastLogin())
+                .studentId(resolvedStudentId)
                 .build();
     }
 }

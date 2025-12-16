@@ -40,6 +40,10 @@ services:
     volumes:
       - ../services/student-service:/usr/src/app
       - student_service_node_modules:/usr/src/app/node_modules
+    networks:
+      default:
+        aliases:
+          - student-service
 
   # 3. Base de données PostgreSQL pour le Service d'Authentification
   auth_db:
@@ -78,6 +82,10 @@ services:
     depends_on:
       auth_db:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - auth-service
 
   # 5. Redis for API Gateway Rate Limiting
   redis:
@@ -112,7 +120,7 @@ services:
   # 7. Service Grades (Python FastAPI)
   grades_service:
     build:
-      context: ../services/grades-service
+      context: ../services/grade-service
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
@@ -125,7 +133,11 @@ services:
       grades_db:
         condition: service_healthy
     volumes:
-      - ../services/grades-service:/usr/src/app
+      - ../services/grade-service:/usr/src/app
+    networks:
+      default:
+        aliases:
+          - grades-service
 
   # 8. Base de données PostgreSQL pour le Service Courses
   courses_db:
@@ -148,21 +160,85 @@ services:
   # 9. Service Courses (JAX-WS SOAP)
   courses_service:
     build:
-      context: ../services/courses
+      context: ../services/course-service
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8083:8083"
     environment:
-      DB_URL: "jdbc:postgresql://courses_db:5432/courses_db"
-      DB_USER: "postgres"
-      DB_PASSWORD: "postgres"
-      PORT: 8083
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=courses_db
+      - DB_PORT=5432
+      - DB_NAME=courses_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
     depends_on:
       courses_db:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8083/CourseService?wsdl || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    networks:
+      default:
+        aliases:
+          - courses-service
 
-  # 10. API Gateway (Spring Cloud Gateway)
+  # 10. Base de données PostgreSQL pour le Service Billing
+  billing_db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: billing_db
+    volumes:
+      - billing_db_data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 11. Service Billing (.NET Core SOAP)
+  billing_service:
+    build:
+      context: ../services/billing-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ENVIRONMENT=docker
+      - ConnectionStrings__BillingDatabaseDocker=Host=billing_db;Port=5432;Database=billing_db;Username=postgres;Password=postgres
+    depends_on:
+      billing_db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:5000/BillingService.asmx?wsdl || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    networks:
+      default:
+        aliases:
+          - billing-service
+
+  # 12. API Gateway (Spring Cloud Gateway)
   api_gateway:
     build:
       context: ../services/api-gateway
@@ -181,6 +257,25 @@ services:
       - student_service
       - courses_service
       - grades_service
+      - billing_service
+
+  # 13. Frontend (React + TypeScript)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api_gateway
+      - auth_service
+      - student_service
+      - courses_service
+      - grades_service
+      - billing_service
+    environment:
+      - NODE_ENV=production
 
 # Définition des volumes persistants
 volumes:
@@ -189,3 +284,4 @@ volumes:
   auth_db_data:
   grades_db_data:
   courses_db_data:
+  billing_db_data:

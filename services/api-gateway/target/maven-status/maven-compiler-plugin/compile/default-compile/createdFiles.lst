@@ -1,0 +1,12 @@
+com\universite\gateway\controller\GatewayController.class
+com\universite\gateway\config\RateLimiterConfiguration.class
+com\universite\gateway\ApiGatewayApplication.class
+com\universite\gateway\filter\LoggingFilter.class
+com\universite\gateway\exception\GlobalErrorAttributes.class
+com\universite\gateway\config\CorsConfig.class
+com\universite\gateway\config\GatewayConfig.class
+com\universite\gateway\filter\AuthenticationFilter.class
+com\universite\gateway\util\JwtUtil.class
+com\universite\gateway\config\CircuitBreakerConfiguration.class
+com\universite\gateway\controller\FallbackController.class
+com\universite\gateway\filter\AuthenticationFilter$Config.class

@@ -1,17 +1,24 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const studentController = require('../controllers/student.controller');
+const studentController = require("../controllers/student.controller");
+const {
+  authenticateToken,
+  authorize,
+} = require("../middleware/auth.middleware");
 
 // Le chemin de base pour ces routes sera /api/v1/students
+// Protected routes require JWT authentication
 
 /**
  * @swagger
  * /students:
  *   post:
  *     summary: Create a new student
- *     description: Creates a new student record with validation
+ *     description: Creates a new student record with validation (Requires authentication)
  *     tags:
  *       - Students
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -31,6 +38,8 @@ const studentController = require('../controllers/student.controller');
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
  *       409:
  *         description: Duplicate unique field (email or numero_etudiant)
  *         content:
@@ -45,9 +54,11 @@ const studentController = require('../controllers/student.controller');
  *               $ref: '#/components/schemas/ErrorResponse'
  *   get:
  *     summary: Get all students
- *     description: Retrieve a list of all students with pagination and filtering
+ *     description: Retrieve a list of all students with pagination and filtering (Requires authentication)
  *     tags:
  *       - Students
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -86,9 +97,21 @@ const studentController = require('../controllers/student.controller');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.route('/')
-    .post(studentController.createStudent) 
-    .get(studentController.getAllStudents);
+router
+  .route("/")
+  .post(
+    authenticateToken,
+    authorize("ADMIN", "STAFF"),
+    studentController.createStudent
+  )
+  .get(authenticateToken, studentController.getAllStudents);
+
+// Internal endpoint for service-to-service communication (no auth required)
+router.post("/internal", studentController.createStudent);
+router.get(
+  "/internal/by-email/:email",
+  studentController.getStudentByIdentifier
+);
 
 /**
  * @swagger
@@ -210,9 +233,24 @@ router.route('/')
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.route('/:id')
-    .get(studentController.getStudentById) 
-    .put(studentController.updateStudent) 
-    .delete(studentController.deleteStudent);
+router
+  .route("/:id")
+  .get(authenticateToken, studentController.getStudentById)
+  .put(
+    authenticateToken,
+    authorize("ADMIN", "STAFF"),
+    studentController.updateStudent
+  )
+  .delete(
+    authenticateToken,
+    authorize("ADMIN"),
+    studentController.deleteStudent
+  );
+
+router.get(
+  "/:id/enrollments",
+  authenticateToken,
+  studentController.getStudentEnrollments
+);
 
 module.exports = router;

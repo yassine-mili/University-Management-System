@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cou="http://courses.universite.com/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cou:getStudentCourses>
+         <studentId>1001</studentId>
+      </cou:getStudentCourses>
+   </soapenv:Body>
+</soapenv:Envelope>

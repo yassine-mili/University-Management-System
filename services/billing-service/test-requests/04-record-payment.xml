@@ -1,0 +1,14 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" 
+                  xmlns:bil="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <bil:RecordPayment>
+         <bil:request>
+            <bil:InvoiceId>1</bil:InvoiceId>
+            <bil:Amount>5250.00</bil:Amount>
+            <bil:PaymentMethod>CREDIT_CARD</bil:PaymentMethod>
+            <bil:TransactionReference>TXN-2024-001234</bil:TransactionReference>
+         </bil:request>
+      </bil:RecordPayment>
+   </soapenv:Body>
+</soapenv:Envelope>

@@ -20,6 +20,7 @@ spring:
           "[/**]":
             allowedOrigins:
               - "http://localhost:3000"
+              - "http://localhost:3001"
               - "http://localhost:4200"
               - "http://localhost:8080"
             allowedMethods:
@@ -41,7 +42,10 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=2
+            - name: RewritePath
+              args:
+                regexp: /api/auth/(?<remaining>.*)
+                replacement: /api/v1/auth/${remaining}
             - name: CircuitBreaker
               args:
                 name: authService
@@ -58,7 +62,11 @@ spring:
           predicates:
             - Path=/api/students/**
           filters:
-            - StripPrefix=2
+            - name: AuthenticationFilter
+            - name: RewritePath
+              args:
+                regexp: /api/students/(?<remaining>.*)
+                replacement: /api/v1/students/${remaining}
             - name: CircuitBreaker
               args:
                 name: studentService
@@ -92,7 +100,11 @@ spring:
           predicates:
             - Path=/api/grades/**
           filters:
-            - StripPrefix=2
+            - name: AuthenticationFilter
+            - name: RewritePath
+              args:
+                regexp: /api/grades/(?<remaining>.*)
+                replacement: /api/v1/grades/${remaining}
             - name: CircuitBreaker
               args:
                 name: gradesService
@@ -109,7 +121,20 @@ spring:
           predicates:
             - Path=/api/billing/**
           filters:
+            - name: AuthenticationFilter
             - StripPrefix=2
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Origin
+                value: "*"
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Headers
+                value: "*"
+            - name: AddResponseHeader
+              args:
+                name: Access-Control-Allow-Methods
+                value: "GET,POST,OPTIONS"
             - name: CircuitBreaker
               args:
                 name: billingService

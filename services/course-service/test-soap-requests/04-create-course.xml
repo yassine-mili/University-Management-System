@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:cou="http://courses.universite.com/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <cou:createCourse>
+         <code>CS301</code>
+         <name>Advanced Algorithms</name>
+         <description>Advanced algorithm design and analysis</description>
+         <credits>4</credits>
+         <semester>Fall 2024</semester>
+         <capacity>35</capacity>
+         <prerequisites>CS201</prerequisites>
+         <enrollmentStartDate>2024-08-01 00:00:00</enrollmentStartDate>
+         <enrollmentEndDate>2024-09-15 23:59:59</enrollmentEndDate>
+      </cou:createCourse>
+   </soapenv:Body>
+</soapenv:Envelope>
